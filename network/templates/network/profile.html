@@ -1,0 +1,109 @@
+{% extends "network/layout.html" %}
+{% load static %}
+{% block body %}
+<div class="user_info">
+</div>
+<div class="user_posts">
+</div>
+    <script type="text/javascript">
+        console.log("{{ follow }}");
+        function load_top(){
+            document.querySelector(".user_info").innerHTML = ` 
+            <div>
+                <h1>{{username}}</h1>
+            </div>
+            <div class="follow_info">
+                <div class="following"><h4>following: {{following}} </h4></div>
+                <div class="followers"><h4>followers: {{followers}} </h4></div>
+                <div class="posts"><h4>Posts: {{posts}}</h4></div>
+                
+            </div>
+            <div class="follow"></div> <hr>`;
+
+            if("{{ follow }}" === "True"){
+                document.querySelector(".follow").innerHTML = `<button type="button" class="btn btn-secondary">Unfollow</button>`;
+            }
+            else{
+                document.querySelector(".follow").innerHTML = `<button type="button" class="btn btn-primary">Follow</button>`;
+            }
+
+
+        }
+        function add_post(contents){
+            const date = new Date(contents.date);
+            const localDate = date.toLocaleString();
+            const postdiv = document.createElement('div');
+            let like_view = '';
+            if(contents.liked === true){
+                like_view = `❤️ ${contents.like}`;
+            }
+            else{
+                like_view = `🤍 ${contents.like}`;
+            }
+            postdiv.innerHTML = `<div class="post">
+                <h5>${contents.title}</h5>
+                <p>${contents.post}</p>
+                <div class="extra">
+                <p>${localDate}</br>
+                <button class="like ${contents.id}" id="like${contents.id}">${like_view}</button>
+                </p></div></div>`
+
+            // Append the new div to the .posts div
+            document.querySelector('.user_posts').appendChild(postdiv);   
+        }
+
+        function load_bottom(){
+            fetch(`/loadPost?id={{id}}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log("4");
+                console.log(data);
+                data.posts.forEach(add_post);
+            })
+        }
+
+        async function liked(id){
+            fetch(`/like?id=${id}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+                if(data.liked === true){
+                    document.querySelector(`#like${id}`).innerHTML = `❤️ ${data.like}`;
+                }
+                else{
+                    document.querySelector(`#like${id}`).innerHTML = `🤍 ${data.like}`;
+                }
+            })
+        } 
+        
+        document.addEventListener("DOMContentLoaded", ()=>{
+            load_top();
+            load_bottom();
+        })
+        document.addEventListener("click", event =>{
+            const element = event.target;
+            if(element.className.includes("btn")){
+                fetch(`/follow?id={{id}}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    if(data.follow === true){
+                        document.querySelector(".follow").innerHTML = `<button type="button" class="btn btn-secondary">Unfollow</button>`;
+                        document.querySelector(".followers").innerHTML = `<h4>followers: ${data.followers} </h4>`;
+                        document.querySelector(".following").innerHTML = `<h4>following: ${data.following} </h4>`;
+                    }
+                    else{
+                        document.querySelector(".follow").innerHTML = `<button type="button" class="btn btn-primary">Follow</button>`;
+                        document.querySelector(".followers").innerHTML = `<h4>followers: ${data.followers} </h4>`;
+                        document.querySelector(".following").innerHTML = `<h4>following: ${data.following} </h4>`;
+                    }
+                })
+            }
+            else if(element.className.includes("like")){
+                const postId = element.classList[1];
+                liked(postId);
+            }
+        })
+
+    </script> 
+{% endblock %} 

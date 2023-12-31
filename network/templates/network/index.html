@@ -1,0 +1,183 @@
+
+{% extends "network/layout.html" %}
+{% load static %}
+{% block body %}
+<h3>All Posts</h3>
+    {% if request.user.is_authenticated %}
+    <div class="new_post">
+        <h5 >New Post</h5>
+        <div class="new_post_block">
+        <form action="{% url 'post' %}" method='POST'>
+            {% csrf_token %}
+            <input type="text" name='title' placeholder="title"  class="new_post_title"></input>
+            <textarea row="4" cols="50" name="content" placeholder="content"  class="new_post_content"></textarea>
+            <button type='submit' class="btn btn-primary" >Post</button>
+        </form>
+        </div>
+    </div>
+    {% endif %}
+
+<script type="text/javascript">
+    let counter = 0;
+    let incriment = 10;
+    let numPages = 10;
+    let currentPage = 1;
+    let currentload = 1;
+    function paginate(){
+        console.log("1");
+        
+    
+        let pagination = document.createElement('ul');
+        pagination.className = 'pagination';
+    
+        let prevItem = document.createElement('li');
+        prevItem.className = 'page-item ' + (currentPage == 1 ? 'disabled' : '');
+        let prevLink = document.createElement('button');
+        prevLink.className = 'previous page-link';
+        prevLink.innerHTML = 'Previous';
+        prevItem.appendChild(prevLink);
+        pagination.appendChild(prevItem);
+    
+        let nextItem = document.createElement('li');
+        nextItem.className = 'page-item ' + (currentload == 0 ? 'disabled' : '');
+        let nextLink = document.createElement('button');
+        nextLink.className = 'next page-link';
+        nextLink.innerHTML = 'Next';
+        nextItem.appendChild(nextLink);
+        pagination.appendChild(nextItem);
+    
+        let parent = document.querySelector('.paginate');  // Replace '#parent' with the selector for your parent element
+        parent.appendChild(pagination);
+    }
+   
+
+    function load(){
+        console.log("3");
+        const start = counter;
+        const end = counter + incriment;
+        counter = end+1;
+        
+        console.log(end);
+        console.log(start);
+        fetch(`/load?start=${start}&end=${end}&f=f`)
+        .then(response => response.json())
+        .then(data => {
+            console.log("4");
+            console.log(data);
+            data.posts.forEach(add_post);
+            
+        })
+    }
+    
+    document.addEventListener("DOMContentLoaded", ()=>{
+        paginate();
+        load();
+    })   
+   
+
+    async function liked(id){
+        fetch(`/like?id=${id}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log(data)
+            if(data.liked === true){
+                document.querySelector(`#like${id}`).innerHTML = `❤️ ${data.like}`;
+            }
+            else{
+                document.querySelector(`#like${id}`).innerHTML = `🤍 ${data.like}`;
+            }
+        })
+    } 
+    
+    function add_post(contents){
+        console.log("5");
+        console.log(contents);
+        const date = new Date(contents.date);
+        const localDate = date.toLocaleString();
+        const postdiv = document.createElement('div');
+        let like_view = '';
+        if(contents.liked === true){
+            like_view = `❤️ ${contents.like}`;
+        }
+        else{
+            like_view = `🤍 ${contents.like}`;
+        }
+        let edit = '';
+        if(contents.user === "{{ request.user.username }}"){
+            edit=`<button class="editbtn ${contents.id}">Edit</button>`
+        }
+        postdiv.innerHTML = `<div class="post post${contents.id}" id="post${contents.id}">
+            <h5>${contents.title}</h5>
+            <p>${contents.post}</p>
+            <div class="edit${contents.id}">${edit}</div> 
+            <div class="extra">
+            <p>${localDate}</br>
+            <button class="like ${contents.id}" id="like${contents.id}">${like_view}</button>
+            </br><button class="user ${contents.id}" onclick="location.href='/profile/${contents.user}'">${contents.user}</button></p></div></div>`
+
+        // Append the new div to the .posts div
+        document.querySelector('.posts').appendChild(postdiv);  
+
+        
+        
+    }
+
+    document.addEventListener('click', event => {
+        const element = event.target;
+        if(element.className.includes('like')){
+            const postId = element.classList[1];
+            liked(postId);
+        }
+        else if(element.className.includes('editbtn')){
+            const postId = element.classList[1];
+            console.log(element.className);
+            console.log(`#post${postId}`);
+            console.log(document.querySelector(`#post${postId}`).innerHTML);
+            fetch(`/get?id=${postId}`)
+            .then(response => response.json())
+            .then(data => {
+                let edit = `<div class="new_post_block">
+                    <h6>Edit</h6>
+                    <form action="{% url 'edit' %}" method='POST'>
+                        {% csrf_token %}
+                        <input type="text" name='title' placeholder="title"  class="new_post_title" value="${data.title}"></input>
+                        <textarea row="4" cols="50" name="content" placeholder="content"  class="new_post_content">${data.post}</textarea>
+                        <input type="hidden" name="id" value="${data.id}">
+                        <button type='submit' class="btn btn-primary ${data.id}" >Edit</button>
+                        <button class="btn btn-danger cancel">Cancel</button>
+                    </form>
+                    </div>`;
+                    document.querySelector(`#post${postId}`).innerHTML = edit;
+                    
+            })
+
+            
+        }
+        else if(element.classList.contains('previous') && element.classList.contains('page-link')){
+            counter = counter - incriment - 1 - incriment - 1;
+            currentPage--;
+            console.log(counter);
+            document.querySelector('.posts').innerHTML = '';
+            document.querySelector('.paginate').innerHTML = '';
+            load();
+            paginate();
+        }
+        else if(element.classList.contains('next') && element.classList.contains('page-link')){
+            currentPage++;
+            document.querySelector('.posts').innerHTML = '';
+            document.querySelector('.paginate').innerHTML = '';
+            console.log("next");
+            load();
+            paginate();
+        }
+    });
+    
+</script>
+
+<div class="posts">
+</div>
+<div class="paginate">
+</div>
+    
+
+{% endblock %}

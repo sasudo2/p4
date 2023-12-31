@@ -1,0 +1,59 @@
+body{
+    padding:5px;
+}
+
+.new_post, .post, .user_info{
+    padding:10px;
+    margin: 10px;
+    border: rgb(175, 174, 174) solid 1px;
+    border-radius:5px;
+    display:block;
+    justify-content:center;
+    
+}
+.new_post_block{
+    display:block;
+    justify-content:center;
+}
+.extra{
+    color:rgb(132, 132, 132);
+}
+.new_post_title, .new_post_content{
+    border: rgb(175, 174, 174) solid 1px;
+    border-radius:5px;
+    display:block;
+    margin-bottom:5px;
+    width:100%;
+    padding-left:3px;
+}
+
+.like, .user, .editbtn, .next, .previous {
+    background-color:white;
+    border:none;
+    
+}
+.next, .previous{
+    margin: none;
+}
+.like:active, .user:active, .editbtn:active, .previous:active, .next:active {
+    border:none;
+    outline:none;
+}
+.like:focus, .user:focus, .editbtn:focus, .previous:focus, .next:focus {
+    outline: none;
+    border: none;
+}
+.editbtn , .next, .previous {
+    color:rgb(0, 98, 255);
+}
+.user_info{
+    border: none;
+}
+.follow_info{
+    display: grid;
+    grid-template-columns: 300px 300px auto;
+    margin-top: 50px;
+}
+.follow{
+    margin-top:10px;
+}
